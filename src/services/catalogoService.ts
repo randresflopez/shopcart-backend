@@ -23,7 +23,7 @@ export class CatalogoService {
 
         let query = `
             SELECT p.IDProducto, p.IDCategoria, c.Nombre AS CategoriaNombre, 
-                   p.Nombre, p.Descripcion, p.PrecioBase, p.Activo
+                   p.Nombre, p.Descripcion, p.Activo
             FROM dbo.Producto p
             INNER JOIN dbo.Categoria c ON p.IDCategoria = c.IDCategoria
             WHERE p.Activo = 1
@@ -40,16 +40,16 @@ export class CatalogoService {
         return resultado.recordset;
     }
 
-    // 3. Obtener el detalle de un producto específico con sus variantes y stock
+    // 3. Obtener el detalle de un producto específico con sus variantes, SKU, precio y stock
     static async obtenerDetalleProducto(idProducto: number) {
         const pool = await connectDB();
 
-        // Consultar el producto
+        // Consultar el producto base
         const productoRes = await pool.request()
             .input('idProducto', sql.Int, idProducto)
             .query(`
                 SELECT p.IDProducto, p.IDCategoria, c.Nombre AS CategoriaNombre, 
-                       p.Nombre, p.Descripcion, p.PrecioBase
+                       p.Nombre, p.Descripcion
                 FROM dbo.Producto p
                 INNER JOIN dbo.Categoria c ON p.IDCategoria = c.IDCategoria
                 WHERE p.IDProducto = @idProducto AND p.Activo = 1
@@ -61,11 +61,11 @@ export class CatalogoService {
 
         const producto = productoRes.recordset[0];
 
-        // Consultar sus variantes activas y el stock actual
+        // Consultar sus variantes activas (SKU, Nombre de variante, Precio y Stock)
         const variantesRes = await pool.request()
             .input('idProducto', sql.Int, idProducto)
             .query(`
-                SELECT IDVariante, SKU, NombreVariante, Precio, StockActual
+                SELECT IDVariante, SKU, Nombre, Precio, StockActual
                 FROM dbo.VarianteProducto
                 WHERE IDProducto = @idProducto AND Activo = 1
             `);
